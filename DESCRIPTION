@@ -1,11 +1,23 @@
 Package: fcasthelpr
 Type: Package
-Title: What the Package Does (Title Case)
-Version: 0.1.0
-Author: Who wrote it
-Maintainer: The package maintainer <yourself@somewhere.net>
-Description: More about what it does (maybe more than one line)
-    Use four spaces when indenting paragraphs within the Description.
-License: What license is it under?
+Title: Helper functions for forecast models
+Version: 0.0.1
+Authors@R: person("Brian", "Gulbis", email="brian.gulbis@gmail.com", role=c("aut","cre"))
+Description: This package provides functions for creating and visualizing forecasting models.
+License: GPL-3
 Encoding: UTF-8
 LazyData: true
+Imports:
+    dplyr,
+    forecast,
+    ggplot2,
+    lubridate,
+    magrittr,
+    plotly,
+    purrr,
+    readr,
+    rlang,
+    stringr,
+    tidyr,
+    timetk
+RoxygenNote: 7.1.1
