@@ -8,16 +8,24 @@ License: GPL-3
 Encoding: UTF-8
 LazyData: true
 Imports:
+    broom,
     dplyr,
     forecast,
+    forecastHybrid,
     ggplot2,
     lubridate,
     magrittr,
     plotly,
     purrr,
+    RColorBrewer,
     readr,
     rlang,
+    stats,
     stringr,
+    sweep,
+    themebg,
     tidyr,
-    timetk
+    tidyselect,
+    timetk,
+    zoo
 RoxygenNote: 7.1.1
