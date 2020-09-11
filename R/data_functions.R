@@ -42,7 +42,7 @@ subset_masks <- function(.data, masks, ...) {
     .data %>%
         dplyr::filter(mask %in% masks) %>%
         dplyr::group_by(...) %>%
-        dplyr::summarize(dplyr::across(tidyselect::where(is.numeric), sum, na.rm = TRUE)) %>%
+        dplyr::summarize(dplyr::across(where(is.numeric), sum, na.rm = TRUE)) %>%
         calc_params() %>%
         dplyr::ungroup()
 }
@@ -82,17 +82,19 @@ ts_to_df <- function(.ts, timetk_idx = TRUE, dates = NULL) {
     df <- .ts %>%
         sweep::sw_sweep(timetk_idx = timetk_idx, rename_index = "date") %>%
         dplyr::mutate(
-            dplyr::across(tidyselect::where(is.POSIXct), lubridate::floor_date, unit = "day"),
-            dplyr::across(tidyselect::where(is.numeric), as.integer)
+            dplyr::across(where(is.POSIXct), lubridate::floor_date, unit = "day"),
+            dplyr::across(where(is.numeric), as.integer)
         )
 
-    if (!is.POSIXct(df$index) & !is.null(dates)) {
-        df$orig_index <- df$index
-        df$index <- dates
+    if (!is.POSIXct(df$date) & !is.null(dates)) {
+        df$orig_index <- df$date
+        df$date <- dates
     }
 
     df
 }
+
+if(getRversion() >= "2.15.1") utils::globalVariables("where")
 
 #' Get an individual model from a hybridModel object
 #'
@@ -103,11 +105,19 @@ ts_to_df <- function(.ts, timetk_idx = TRUE, dates = NULL) {
 #' @return Returns a \code{tibble} object.
 #' @keywords internal
 get_mod <- function(x, .data, .idx) {
-    .data[[x]] %>%
-        sweep::sw_sweep(timetk_idx = TRUE, rename_index = "date") %>%
-        dplyr::filter(key == "forecast") %>%
-        dplyr::select(-date) %>%
-        dplyr::add_column(date = .idx$date, .before = 1)
+    tk_idx = timetk::has_timetk_idx(.data)
+
+    df <- .data[[x]] %>%
+        sweep::sw_sweep(timetk_idx = tk_idx, rename_index = "date") %>%
+        dplyr::filter(key == "forecast")
+
+    if (!is.POSIXct(df$date)) {
+        df <- df %>%
+            dplyr::select(-date) %>%
+            tibble::add_column(date = .idx$date, .before = 1)
+    }
+
+    df
 }
 
 #' Converts a hybrid forecast to a data frame
@@ -207,31 +217,134 @@ make_preds <- function(.data, date, y, .min = NULL, .max = NULL) {
 #' fitted values to the data frame.
 #'
 #' @param .data A data frame from a \code{forecast} object
+#' @param y_span Parameter which controls the degree of smoothing for trend
+#'   lines
+#' @param pi_span Parameter which controls the degree of smoothing for
+#'   prediction intervals
+#' @param na Action to be taken with missing values in the response or
+#'   predictors. The default is "na.exclude".
 #'
 #' @return Returns a \code{tibble} object.
 #' @export
-make_smooth <- function(.data) {
+make_smooth <- function(.data, key, y_span = 0.75, pi_span = 0.75, na = "na.exclude") {
+    key <- rlang::enquo(key)
+
     pi <- .data %>%
-        dplyr::filter(stringr::str_to_lower(key) != "actual") %>%
-        dplyr::group_by(key) %>%
+        dplyr::filter(stringr::str_to_lower(!!key) != "actual") %>%
+        dplyr::group_by(!!key) %>%
         tidyr::nest() %>%
         dplyr::mutate(
-            smth_lo = purrr::map(data, stats::loess, formula = lo.80 ~ day),
+            smth_lo = purrr::map(
+                data,
+                stats::loess,
+                formula = lo.80 ~ day,
+                span = pi_span,
+                na.action = na),
             fit_lo = purrr::map(smth_lo, `[[`, "fitted"),
-            smth_hi = purrr::map(data, stats::loess, formula = hi.80 ~ day),
+            smth_hi = purrr::map(
+                data,
+                stats::loess,
+                formula = hi.80 ~ day,
+                span = pi_span,
+                na.action = na),
             fit_hi = purrr::map(smth_hi, `[[`, "fitted")
         ) %>%
         tidyr::unnest(cols = c(data, fit_lo, fit_hi)) %>%
         dplyr::select(date, key, starts_with("fit"))
 
     .data %>%
-        dplyr::group_by(key) %>%
+        dplyr::group_by(!!key) %>%
         tidyr::nest() %>%
         dplyr::mutate(
-            smth = purrr::map(data, stats::loess, formula = y ~ day, span = 0.5),
+            smth = purrr::map(
+                data,
+                stats::loess,
+                formula = y ~ day,
+                span = y_span,
+                na.action = na),
             fit = purrr::map(smth, `[[`, "fitted")
         ) %>%
         dplyr::select(-smth) %>%
         tidyr::unnest(cols = c(data, fit)) %>%
         dplyr::left_join(pi, by = c("date", "key"))
+}
+
+#' Smooth the mean values
+#'
+#' Applies the \link[stats]{loess} function to time series values and adds the
+#' fitted values to the data frame.
+#'
+#' @param .data A data frame from a \code{forecast} object
+#' @param key Column to group by
+#' @param .col String with the name of the column to smooth, default is ".mean"
+#' @param span Parameter which controls the degree of smoothing
+#' @param na.action Action to be taken with missing values in the response or
+#'   predictors. The default is "na.exclude".
+#'
+#' @return Returns a \code{tibble} object.
+#' @export
+smooth_mean <- function(.data, key, .col = ".mean", span = 0.5, na.action = "na.exclude") {
+    key <- rlang::enquo(key)
+
+    .data %>%
+        tibble::as_tibble() %>%
+        dplyr::group_by(!!key) %>%
+        dplyr::mutate(day = as.numeric(date - first(date)) + 1) %>%
+        tidyr::nest() %>%
+        dplyr::mutate(
+            smth = purrr::map(
+                data,
+                stats::loess,
+                formula = as.formula(paste(.col, "~ day")),
+                span = span,
+                na.action = na.action
+            ),
+            fit = purrr::map(smth, `[[`, "fitted")
+        ) %>%
+        dplyr::select(-dplyr::starts_with("smth")) %>%
+        tidyr::unnest(cols = c(data, dplyr::starts_with("fit")))
+}
+
+#' Smooth the prediction interval values
+#'
+#' Applies the \link[stats]{loess} function to time series values and adds the
+#' fitted values to the data frame.
+#'
+#' @param .data A data frame from a \code{forecast} object
+#' @param key Column to group by
+#' @param span Parameter which controls the degree of smoothing
+#' @param na.action Action to be taken with missing values in the response or
+#'   predictors. The default is "na.exclude".
+#'
+#' @return Returns a \code{tibble} object.
+#' @export
+smooth_pi <- function(.data, key, span = 0.75, na.action = "na.exclude") {
+    key <- rlang::enquo(key)
+
+    .data %>%
+        tibble::as_tibble() %>%
+        dplyr::group_by(!!key) %>%
+        dplyr::mutate(day = as.numeric(date - first(date)) + 1) %>%
+        tidyr::nest() %>%
+        dplyr::mutate(
+            smth_lo = purrr::map(
+                data,
+                stats::loess,
+                formula = as.formula("lo_80 ~ day"),
+                span = span,
+                na.action = na.action
+            ),
+            fit_lo = purrr::map(smth_lo, `[[`, "fitted"),
+            smth_hi = purrr::map(
+                data,
+                stats::loess,
+                formula = as.formula("hi_80 ~ day"),
+                span = span,
+                na.action = na.action
+            ),
+            fit_hi = purrr::map(smth_hi, `[[`, "fitted"),
+        ) %>%
+        dplyr::select(-dplyr::starts_with("smth")) %>%
+        tidyr::unnest(cols = c(data, dplyr::starts_with("fit"))) %>%
+        dplyr::ungroup()
 }

@@ -4,10 +4,19 @@
 \alias{make_smooth}
 \title{Add smoothed values to data frame}
 \usage{
-make_smooth(.data)
+make_smooth(.data, key, y_span = 0.75, pi_span = 0.75, na = "na.exclude")
 }
 \arguments{
 \item{.data}{A data frame from a \code{forecast} object}
+
+\item{y_span}{Parameter which controls the degree of smoothing for trend
+lines}
+
+\item{pi_span}{Parameter which controls the degree of smoothing for
+prediction intervals}
+
+\item{na}{Action to be taken with missing values in the response or
+predictors. The default is "na.exclude".}
 }
 \value{
 Returns a \code{tibble} object.
