@@ -2,7 +2,7 @@
 % Please edit documentation in R/plot_functions.R
 \name{plotly_fable}
 \alias{plotly_fable}
-\title{Plot a hybrid forecast}
+\title{Plot forecasts}
 \usage{
 plotly_fable(
   actuals,
@@ -12,6 +12,7 @@ plotly_fable(
   title = "Combined forecast model",
   xtitle = "Date",
   ytitle = "Number",
+  pi = TRUE,
   fc_line = "solid"
 )
 }
@@ -30,6 +31,9 @@ plotly_fable(
 
 \item{ytitle}{A string with the y-axis title.}
 
+\item{pi}{If \code{TRUE} the prediction intervals for all individual models
+will be shown.}
+
 \item{fc_line}{A string which Sets the dash style of the forecast lines.
 Valid options are: "solid", "dot", "dash", "longdash", "dashdot", or
 "longdashdot"}
@@ -38,5 +42,5 @@ Valid options are: "solid", "dot", "dash", "longdash", "dashdot", or
 A \code{plotly} object
 }
 \description{
-Plot a hybrid forecast and all indivudal models using \code{plotly}.
+Plots combined forecast model and all indivdual models using \code{plotly}.
 }

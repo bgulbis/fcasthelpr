@@ -19,10 +19,6 @@ plotly_smooth(
 \item{xtitle}{A string with the x-axis title.}
 
 \item{ytitle}{A string with the y-axis title.}
-
-\item{fc_line}{A string which Sets the dash style of the forecast lines.
-Valid options are: "solid", "dot", "dash", "longdash", "dashdot", or
-"longdashdot"}
 }
 \value{
 A \code{plotly} object
