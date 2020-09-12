@@ -44,7 +44,7 @@ subset_masks <- function(.data, masks, ...) {
         dplyr::filter(mask %in% masks) %>%
         dplyr::group_by(...) %>%
         dplyr::summarize(dplyr::across(where(is.numeric), sum, na.rm = TRUE)) %>%
-        calc_params() %>%
+        # calc_params() %>%
         dplyr::ungroup()
 }
 

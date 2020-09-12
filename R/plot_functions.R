@@ -153,3 +153,46 @@ plotly_smooth <- function(.data,
             legendgroup = .model
         )
 }
+
+#' Plot calculated future values
+#'
+#' Plots calculated future values \code{plotly}.
+#'
+#' @param .data A data frame containing values
+#' @param y column containing the values
+#' @param title A string with the plot title.
+#' @param xtitle A string with the x-axis title.
+#' @param ytitle A string with the y-axis title.
+#' @param fc_line A string which Sets the dash style of the forecast lines.
+#'   Valid options are: "solid", "dot", "dash", "longdash", "dashdot", or
+#'   "longdashdot"
+#'
+#' @return A \code{plotly} object
+#' @export
+plotly_calc <- function(.data,
+                         y,
+                         title = "Calculated future values",
+                         xtitle = "Date",
+                         ytitle = "Number",
+                         fc_line = "solid") {
+
+    y <- rlang::enquo(y)
+    .model <- stats::as.formula("~.model")
+
+    .data %>%
+        plotly::plot_ly(
+            x = stats::as.formula("~date"),
+            colors = c("#000000", "#377eb8")
+        ) %>%
+        plotly::layout(
+            title = list(text = title, x = 0),
+            xaxis = list(title = xtitle, showgrid = FALSE),
+            yaxis = list(title = ytitle, showgrid = FALSE)
+        ) %>%
+        plotly::add_lines(
+            y = y,
+            color = .model,
+            line = list(dash = fc_line),
+            name = .model
+        )
+}
