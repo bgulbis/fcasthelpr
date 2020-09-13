@@ -1,54 +1,28 @@
 # data_functions.R
 
-#' Calculate rolling mean
+#' Get today's value
 #'
-#' @param x an object (representing a series of observations)
-#' @param k integer width of the rolling window
-#' @param fill a three-component vector or list (recycled otherwise) providing
-#'   filling values at the left/within/to the right of the data range
+#' Get the value for today for a specified column
 #'
-#' @return An object of the same class as x with the rolling mean.
-#' @keywords internal
-mean_7d <- function(x, k = 7, fill = "extend") {
-    zoo::rollmean(x, k, fill)
-}
-
-#' Calculate the days-on-hand
+#' @param .data A data frame
+#' @param .col The column with the value
+#' @param m A string with the name of the mask
 #'
-#' @param .data a data frame with daily values for inventory, shipments
-#'   received, number reprocessed, number distributed, and number returned
+#' @return A numeric value
 #'
-#' @return A data frame with days-on-hand calculation.
 #' @export
-calc_params <- function(.data) {
+get_value <- function(.data, .col, m) {
+    .col <- rlang::enquo(.col)
+    mask <- rlang::sym("mask")
+    date <- rlang::sym("date")
+
     .data %>%
-        dplyr::mutate(
-            days_on_hand = (mean_7d(new_inventory) + mean_7d(shipments) + mean_7d(reprocessed)) / (mean_7d(distributed) - mean_7d(returned)),
-            doh_no_reprocess = (mean_7d(new_inventory) + mean_7d(shipments)) / mean_7d(distributed),
-            dplyr::across(c(days_on_hand, doh_no_reprocess), dplyr::na_if, y = Inf),
-            dplyr::across(c(days_on_hand, doh_no_reprocess), ~dplyr::if_else(. > 250 | . < 0, NA_real_, .))
-        )
+        dplyr::filter(
+            !!mask == m,
+            !!date == lubridate::today()
+        ) %>%
+        dplyr::pull(!!.col)
 }
-
-
-#' Create a subset of mask data
-#'
-#' @param .data data frame
-#' @param masks vector of masks
-#' @param ... grouping columns
-#'
-#' @return
-#' @export
-subset_masks <- function(.data, masks, ...) {
-    .data %>%
-        dplyr::filter(mask %in% masks) %>%
-        dplyr::group_by(...) %>%
-        dplyr::summarize(dplyr::across(where(is.numeric), sum, na.rm = TRUE)) %>%
-        # calc_params() %>%
-        dplyr::ungroup()
-}
-
-# if(getRversion() >= "2.15.1") utils::globalVariables("where")
 
 #' Smooth the mean values
 #'

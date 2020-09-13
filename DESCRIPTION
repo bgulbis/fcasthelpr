@@ -16,6 +16,5 @@ Imports:
     stats,
     stringr,
     tibble,
-    tidyr,
-    zoo
+    tidyr
 RoxygenNote: 7.1.1
