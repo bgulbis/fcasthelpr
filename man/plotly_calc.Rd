@@ -7,6 +7,8 @@
 plotly_calc(
   .data,
   y,
+  .min = NULL,
+  .max = NULL,
   title = "Calculated future values",
   xtitle = "Date",
   ytitle = "Number",
@@ -16,7 +18,11 @@ plotly_calc(
 \arguments{
 \item{.data}{A data frame containing values}
 
-\item{y}{column containing the values}
+\item{y}{Column containing the values}
+
+\item{.min}{Optional, column containing the y-min values for ribbon}
+
+\item{.max}{Optional, column containing the y-max values for ribbon}
 
 \item{title}{A string with the plot title.}
 

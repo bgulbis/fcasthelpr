@@ -9,7 +9,6 @@
 #' @param m A string with the name of the mask
 #'
 #' @return A numeric value
-#'
 #' @export
 get_value <- function(.data, .col, m) {
     .col <- rlang::enquo(.col)
@@ -22,6 +21,48 @@ get_value <- function(.data, .col, m) {
             !!date == lubridate::today()
         ) %>%
         dplyr::pull(!!.col)
+}
+
+
+#' Calculate inventory-related values
+#'
+#' Calculate the expected inventory, burn rate, days remaining, and
+#' days-on-hand.
+#'
+#' @param .data A data frame
+#' @param .col Column with the number of masks distributed
+#'
+#' @return Returns a \code{tibble} object.
+#' @export
+inventory_calcs <- function(.data, .col) {
+    .col <- rlang::enquo(.col)
+    shipments <- rlang::sym("shipments")
+    lag_ship <- rlang::sym("lag_ship")
+    lag_dist <- rlang::sym("lag_dist")
+    stock_change <- rlang::sym("stock_change")
+    .model <- rlang::sym(".model")
+    new_inventory <- rlang::sym("new_inventory")
+    tmp_inv <- rlang::sym("tmp_inv")
+    cum_change <- rlang::sym("cum_change")
+    available <- rlang::sym("available")
+    burn_rate <- rlang::sym("burn_rate")
+    days_remain <- rlang::sym("days_remain")
+
+    .data %>%
+        dplyr::mutate(
+            dplyr::across(c(!!shipments, !!.col), round),
+            !!"lag_dist" := dplyr::lag(!!.col),
+            !!"stock_change" := !!lag_ship - !!lag_dist,
+            dplyr::across(!!stock_change, ~if_else(!!.model == "Actual", 0, .)),
+            !!"cum_change" := cumsum(!!stock_change),
+            dplyr::across(!!new_inventory, ~dplyr::coalesce(., !!tmp_inv + !!cum_change)),
+            dplyr::across(!!available, ~dplyr::coalesce(., !!new_inventory)),
+            !!"burn_rate" := (dplyr::lag(!!available, 7) - !!available) / 7,
+            !!"days_remain" := !!available / !!burn_rate,
+            dplyr::across(!!days_remain, ~dplyr::if_else(. < 0, NA_real_, .)),
+            !!"days_on_hand" := zoo::rollmean(!!available, 7, fill = "extend") / zoo::rollmean(!!.col, 7, fill = "extend")
+        )
+
 }
 
 #' Smooth the mean values
@@ -40,11 +81,12 @@ get_value <- function(.data, .col, m) {
 #' @export
 smooth_mean <- function(.data, key, .col = ".mean", span = 0.5, na.action = "na.exclude") {
     key <- rlang::enquo(key)
+    date <- rlang::sym("date")
 
     .data %>%
         tibble::as_tibble() %>%
         dplyr::group_by(!!key) %>%
-        dplyr::mutate(day = as.numeric(date - first(date)) + 1) %>%
+        dplyr::mutate(!!"day" := as.numeric(!!date - dplyr::first(!!date)) + 1) %>%
         tidyr::nest() %>%
         dplyr::mutate(
             smth = purrr::map(
@@ -75,29 +117,30 @@ smooth_mean <- function(.data, key, .col = ".mean", span = 0.5, na.action = "na.
 #' @export
 smooth_pi <- function(.data, key, span = 0.75, na.action = "na.exclude") {
     key <- rlang::enquo(key)
+    date <- rlang::sym("date")
 
     .data %>%
         tibble::as_tibble() %>%
         dplyr::group_by(!!key) %>%
-        dplyr::mutate(day = as.numeric(date - first(date)) + 1) %>%
+        dplyr::mutate(!!"day" := as.numeric(!!date - dplyr::first(!!date)) + 1) %>%
         tidyr::nest() %>%
         dplyr::mutate(
-            smth_lo = purrr::map(
+            !!"smth_lo" := purrr::map(
                 data,
                 stats::loess,
                 formula = stats::as.formula("lo_80 ~ day"),
                 span = span,
                 na.action = na.action
             ),
-            fit_lo = purrr::map(smth_lo, `[[`, "fitted"),
-            smth_hi = purrr::map(
+            !!"fit_lo" := purrr::map(smth_lo, `[[`, "fitted"),
+            !!"smth_hi" := purrr::map(
                 data,
                 stats::loess,
                 formula = stats::as.formula("hi_80 ~ day"),
                 span = span,
                 na.action = na.action
             ),
-            fit_hi = purrr::map(smth_hi, `[[`, "fitted"),
+            !!"fit_hi" := purrr::map(smth_hi, `[[`, "fitted"),
         ) %>%
         dplyr::select(-dplyr::starts_with("smth")) %>%
         tidyr::unnest(cols = c(data, dplyr::starts_with("fit"))) %>%

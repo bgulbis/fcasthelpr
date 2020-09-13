@@ -9,6 +9,7 @@ Encoding: UTF-8
 LazyData: true
 Imports:
     dplyr,
+    lubridate,
     magrittr,
     plotly,
     purrr,
@@ -16,5 +17,6 @@ Imports:
     stats,
     stringr,
     tibble,
-    tidyr
+    tidyr,
+    zoo
 RoxygenNote: 7.1.1

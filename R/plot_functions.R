@@ -122,6 +122,7 @@ plotly_smooth <- function(.data,
     fit <- stats::as.formula("~fit")
     .model <- stats::as.formula("~.model")
     .mean <- stats::as.formula("~.mean")
+    model <- rlang::sym(".model")
 
     .data %>%
         plotly::plot_ly(
@@ -143,12 +144,14 @@ plotly_smooth <- function(.data,
         plotly::add_ribbons(
             ymin = fit_lo,
             ymax = fit_hi,
+            data = dplyr::filter(.data, !!model == "Forecast"),
             opacity = 0.4,
             legendgroup = .model,
             showlegend = FALSE
         ) %>%
         plotly::add_lines(
             y = fit,
+            data = .data,
             name = .model,
             legendgroup = .model
         )
@@ -159,7 +162,9 @@ plotly_smooth <- function(.data,
 #' Plots calculated future values \code{plotly}.
 #'
 #' @param .data A data frame containing values
-#' @param y column containing the values
+#' @param y Column containing the values
+#' @param .min Optional, column containing the y-min values for ribbon
+#' @param .max Optional, column containing the y-max values for ribbon
 #' @param title A string with the plot title.
 #' @param xtitle A string with the x-axis title.
 #' @param ytitle A string with the y-axis title.
@@ -171,15 +176,20 @@ plotly_smooth <- function(.data,
 #' @export
 plotly_calc <- function(.data,
                          y,
-                         title = "Calculated future values",
-                         xtitle = "Date",
-                         ytitle = "Number",
-                         fc_line = "solid") {
+                        .min = NULL,
+                        .max = NULL,
+                        title = "Calculated future values",
+                        xtitle = "Date",
+                        ytitle = "Number",
+                        fc_line = "solid") {
 
     y <- rlang::enquo(y)
+    .min <- rlang::enquo(.min)
+    .max <- rlang::enquo(.max)
     .model <- stats::as.formula("~.model")
+    model <- rlang::sym(".model")
 
-    .data %>%
+    p <- .data %>%
         plotly::plot_ly(
             x = stats::as.formula("~date"),
             colors = c("#000000", "#377eb8")
@@ -188,9 +198,26 @@ plotly_calc <- function(.data,
             title = list(text = title, x = 0),
             xaxis = list(title = xtitle, showgrid = FALSE),
             yaxis = list(title = ytitle, showgrid = FALSE)
-        ) %>%
+        )
+
+    if (!is.null(.min) & !is.null(.max)) {
+        p <- p %>%
+            plotly::add_ribbons(
+                ymin = .min,
+                ymax = .max,
+                data = dplyr::filter(.data, !!model == "Forecast"),
+                opacity = 0.4,
+                color = .model,
+                line = list(width = 1),
+                legendgroup = .model,
+                showlegend = FALSE
+            )
+    }
+
+    p %>%
         plotly::add_lines(
             y = y,
+            data = .data,
             color = .model,
             line = list(dash = fc_line),
             name = .model
