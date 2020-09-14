@@ -52,9 +52,11 @@ plotly_fable <- function(actuals,
             ymax = hi_80,
             data = combo,
             opacity = 0.4,
-            fillcolor = "#BFBFBF",
+            color = "#000000",
+            # fillcolor = "#BFBFBF",
             line = list(width = 1, color = "#000000"),
             legendgroup = .model,
+            name = "Forecast",
             showlegend = FALSE
         ) %>%
         plotly::add_lines(
