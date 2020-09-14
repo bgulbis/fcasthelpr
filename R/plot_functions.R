@@ -52,9 +52,13 @@ plotly_fable <- function(actuals,
             ymax = hi_80,
             data = combo,
             opacity = 0.4,
+            # color = .model,
             color = "#000000",
             # fillcolor = "#BFBFBF",
-            line = list(width = 1, color = "#000000"),
+            line = list(
+                color = "#000000",
+                width = 1
+            ),
             legendgroup = .model,
             name = "Forecast",
             showlegend = FALSE
@@ -68,8 +72,8 @@ plotly_fable <- function(actuals,
                 dash = fc_line,
                 width = 1.5
             ),
-            legendgroup = .model,
-            name = "Forecast"
+            name = "Forecast",
+            legendgroup = .model
         )
 
     if (!is.null(mods)) {
