@@ -23,7 +23,6 @@ get_value <- function(.data, .col, m) {
         dplyr::pull(!!.col)
 }
 
-
 #' Calculate inventory-related values
 #'
 #' Calculate the expected inventory, burn rate, days remaining, and
@@ -82,6 +81,8 @@ inventory_calcs <- function(.data, .col) {
 smooth_mean <- function(.data, key, .col = ".mean", span = 0.5, na.action = "na.exclude") {
     key <- rlang::enquo(key)
     date <- rlang::sym("date")
+    data <- rlang::sym("data")
+    smth <- rlang::sym("smth")
 
     .data %>%
         tibble::as_tibble() %>%
@@ -89,60 +90,15 @@ smooth_mean <- function(.data, key, .col = ".mean", span = 0.5, na.action = "na.
         dplyr::mutate(!!"day" := as.numeric(!!date - dplyr::first(!!date)) + 1) %>%
         tidyr::nest() %>%
         dplyr::mutate(
-            smth = purrr::map(
-                data,
+            !!"smth" := purrr::map(
+                !!data,
                 stats::loess,
                 formula = stats::as.formula(paste(.col, "~ day")),
                 span = span,
                 na.action = na.action
             ),
-            fit = purrr::map(smth, `[[`, "fitted")
+            !!"fit" := purrr::map(!!smth, `[[`, "fitted")
         ) %>%
         dplyr::select(-dplyr::starts_with("smth")) %>%
-        tidyr::unnest(cols = c(data, dplyr::starts_with("fit")))
-}
-
-#' Smooth the prediction interval values
-#'
-#' Applies the \link[stats]{loess} function to time series values and adds the
-#' fitted values to the data frame.
-#'
-#' @param .data A data frame from a \code{forecast} object
-#' @param key Column to group by
-#' @param span Parameter which controls the degree of smoothing
-#' @param na.action Action to be taken with missing values in the response or
-#'   predictors. The default is "na.exclude".
-#'
-#' @return Returns a \code{tibble} object.
-#' @export
-smooth_pi <- function(.data, key, span = 0.75, na.action = "na.exclude") {
-    key <- rlang::enquo(key)
-    date <- rlang::sym("date")
-
-    .data %>%
-        tibble::as_tibble() %>%
-        dplyr::group_by(!!key) %>%
-        dplyr::mutate(!!"day" := as.numeric(!!date - dplyr::first(!!date)) + 1) %>%
-        tidyr::nest() %>%
-        dplyr::mutate(
-            !!"smth_lo" := purrr::map(
-                data,
-                stats::loess,
-                formula = stats::as.formula("lo_80 ~ day"),
-                span = span,
-                na.action = na.action
-            ),
-            !!"fit_lo" := purrr::map(smth_lo, `[[`, "fitted"),
-            !!"smth_hi" := purrr::map(
-                data,
-                stats::loess,
-                formula = stats::as.formula("hi_80 ~ day"),
-                span = span,
-                na.action = na.action
-            ),
-            !!"fit_hi" := purrr::map(smth_hi, `[[`, "fitted"),
-        ) %>%
-        dplyr::select(-dplyr::starts_with("smth")) %>%
-        tidyr::unnest(cols = c(data, dplyr::starts_with("fit"))) %>%
-        dplyr::ungroup()
+        tidyr::unnest(cols = c(!!data, dplyr::starts_with("fit")))
 }
