@@ -36,7 +36,7 @@ plotly_fable <- function(actuals,
     .model <- stats::as.formula("~.model")
 
     p <- actuals %>%
-        plotly::plot_ly(x = stats::as.formula("~date"), colors = "Set1") %>%
+        plotly::plot_ly(x = stats::as.formula("~date"), colors = "Dark2") %>%
         plotly::layout(
             title = list(text = title, x = 0),
             xaxis = list(title = xtitle, showgrid = FALSE),
@@ -52,11 +52,11 @@ plotly_fable <- function(actuals,
             ymax = hi_80,
             data = combo,
             opacity = 0.4,
-            # color = .model,
-            color = "#000000",
+            color = .model,
+            # color = "#000000",
             # fillcolor = "#BFBFBF",
             line = list(
-                color = "#000000",
+                # color = "#000000",
                 width = 1
             ),
             legendgroup = .model,
@@ -66,11 +66,12 @@ plotly_fable <- function(actuals,
         plotly::add_lines(
             y = .mean,
             data = combo,
-            opacity = 0.8,
+            # opacity = 0.8,
+            color = .model,
             line = list(
-                color = "#000000",
-                dash = fc_line,
-                width = 1.5
+                # color = "#000000",
+                # width = 1.5,
+                dash = fc_line
             ),
             name = "Forecast",
             legendgroup = .model
@@ -97,8 +98,8 @@ plotly_fable <- function(actuals,
                 y = .mean,
                 data = mods,
                 color = .model,
-                opacity = 0.8,
-                line = list(width = 1.5),
+                # opacity = 0.8,
+                # line = list(width = 1.5),
                 legendgroup = .model,
                 visible = "legendonly"
             )
@@ -134,7 +135,8 @@ plotly_smooth <- function(.data,
         plotly::plot_ly(
             x = stats::as.formula("~date"),
             color = .model,
-            colors = c("#000000", "#377eb8")) %>%
+            colors = c("#000000", "#1b9e77") # "#377eb8"
+        ) %>%
         plotly::layout(
             title = list(text = title, x = 0),
             xaxis = list(title = xtitle, showgrid = FALSE),
@@ -198,7 +200,7 @@ plotly_calc <- function(.data,
     p <- .data %>%
         plotly::plot_ly(
             x = stats::as.formula("~date"),
-            colors = c("#000000", "#377eb8")
+            colors = c("#000000", "#1b9e77") # "#377eb8"
         ) %>%
         plotly::layout(
             title = list(text = title, x = 0),
