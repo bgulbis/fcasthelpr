@@ -4,7 +4,7 @@
 \alias{get_value}
 \title{Get today's value}
 \usage{
-get_value(.data, .col, m)
+get_value(.data, .col, m, .date = lubridate::today())
 }
 \arguments{
 \item{.data}{A data frame}
@@ -12,6 +12,8 @@ get_value(.data, .col, m)
 \item{.col}{The column with the value}
 
 \item{m}{A string with the name of the mask}
+
+\item{.date}{A POSIXct date}
 }
 \value{
 A numeric value

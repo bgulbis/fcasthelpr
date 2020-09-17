@@ -7,10 +7,11 @@
 #' @param .data A data frame
 #' @param .col The column with the value
 #' @param m A string with the name of the mask
+#' @param .date A POSIXct date
 #'
 #' @return A numeric value
 #' @export
-get_value <- function(.data, .col, m) {
+get_value <- function(.data, .col, m, .date = lubridate::today()) {
     .col <- rlang::enquo(.col)
     mask <- rlang::sym("mask")
     date <- rlang::sym("date")
@@ -18,7 +19,7 @@ get_value <- function(.data, .col, m) {
     .data %>%
         dplyr::filter(
             !!mask == m,
-            !!date == lubridate::today()
+            !!date == .date
         ) %>%
         dplyr::pull(!!.col)
 }
@@ -57,9 +58,12 @@ inventory_calcs <- function(.data, .col) {
             dplyr::across(!!new_inventory, ~dplyr::coalesce(., !!tmp_inv + !!cum_change)),
             dplyr::across(!!available, ~dplyr::coalesce(., !!new_inventory)),
             !!"burn_rate" := (dplyr::lag(!!available, 7) - !!available) / 7,
+            # !!"avg_burn_rate" := zoo::rollmean(!!burn_rate, 7, fill = "extend"),
             !!"days_remain" := !!available / !!burn_rate,
-            dplyr::across(!!days_remain, ~dplyr::if_else(. < 0, NA_real_, .)),
-            !!"days_on_hand" := zoo::rollmean(!!available, 7, fill = "extend") / zoo::rollmean(!!.col, 7, fill = "extend")
+            # !!"days_remain" := !!available / zoo::rollmean(!!burn_rate, 7, fill = "extend"),
+            # dplyr::across(!!days_remain, ~dplyr::if_else(. < 0, NA_real_, .)),
+            !!"days_on_hand" := !!available / zoo::rollmean(!!.col, 7, fill = "extend")
+            # !!"days_on_hand" := zoo::rollmean(!!available, 7, fill = "extend") / zoo::rollmean(!!.col, 7, fill = "extend")
         )
 
 }

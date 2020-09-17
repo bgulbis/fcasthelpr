@@ -205,7 +205,11 @@ plotly_calc <- function(.data,
         plotly::layout(
             title = list(text = title, x = 0),
             xaxis = list(title = xtitle, showgrid = FALSE),
-            yaxis = list(title = ytitle, showgrid = FALSE)
+            yaxis = list(
+                title = ytitle,
+                showgrid = FALSE,
+                rangemode = "tozero"
+            )
         )
 
     if (!is.null(.min) & !is.null(.max)) {
