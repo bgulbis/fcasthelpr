@@ -4,10 +4,12 @@
 \alias{inventory_calcs}
 \title{Calculate inventory-related values}
 \usage{
-inventory_calcs(.data, .col)
+inventory_calcs(.data, .xreg, .col)
 }
 \arguments{
-\item{.data}{A data frame}
+\item{.data}{A data frame with historical values}
+
+\item{.xreg}{A data frame with forecast values}
 
 \item{.col}{Column with the number of masks distributed}
 }

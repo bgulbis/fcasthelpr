@@ -4,7 +4,7 @@
 \alias{get_value}
 \title{Get today's value}
 \usage{
-get_value(.data, .col, m, .date = lubridate::today())
+get_value(.data, .col, m, model = "Forecast", .date = lubridate::today())
 }
 \arguments{
 \item{.data}{A data frame}
@@ -12,6 +12,9 @@ get_value(.data, .col, m, .date = lubridate::today())
 \item{.col}{The column with the value}
 
 \item{m}{A string with the name of the mask}
+
+\item{model}{A string with the name of the forecast model to use, defaults
+to "Forecast" which is the ensemble model}
 
 \item{.date}{A POSIXct date}
 }
