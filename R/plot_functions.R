@@ -40,7 +40,11 @@ plotly_fable <- function(actuals,
         plotly::layout(
             title = list(text = title, x = 0),
             xaxis = list(title = xtitle, showgrid = FALSE),
-            yaxis = list(title = ytitle, showgrid = FALSE)
+            yaxis = list(
+                title = ytitle,
+                showgrid = FALSE,
+                rangemode = "tozero"
+            )
         ) %>%
         plotly::add_lines(
             y = y,
