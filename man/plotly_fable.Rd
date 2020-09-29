@@ -12,6 +12,8 @@ plotly_fable(
   title = "Combined forecast model",
   xtitle = "Date",
   ytitle = "Number",
+  width = 1200,
+  height = 400,
   pi = TRUE,
   fc_line = "solid"
 )
@@ -30,6 +32,10 @@ plotly_fable(
 \item{xtitle}{A string with the x-axis title.}
 
 \item{ytitle}{A string with the y-axis title.}
+
+\item{width}{Width in pixels}
+
+\item{height}{Height in pixels}
 
 \item{pi}{If \code{TRUE} the prediction intervals for all models
 will be shown.}

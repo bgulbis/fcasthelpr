@@ -8,7 +8,9 @@ plotly_smooth(
   .data,
   title = "Combined forecast model",
   xtitle = "Date",
-  ytitle = "Number"
+  ytitle = "Number",
+  width = 1200,
+  height = 400
 )
 }
 \arguments{
@@ -19,6 +21,10 @@ plotly_smooth(
 \item{xtitle}{A string with the x-axis title.}
 
 \item{ytitle}{A string with the y-axis title.}
+
+\item{width}{Width in pixels}
+
+\item{height}{Height in pixels}
 }
 \value{
 A \code{plotly} object

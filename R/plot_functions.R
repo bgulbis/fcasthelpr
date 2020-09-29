@@ -11,6 +11,8 @@
 #' @param title A string with the plot title.
 #' @param xtitle A string with the x-axis title.
 #' @param ytitle A string with the y-axis title.
+#' @param width Width in pixels
+#' @param height Height in pixels
 #' @param pi If \code{TRUE} the prediction intervals for all models
 #'   will be shown.
 #' @param fc_line A string which Sets the dash style of the forecast lines.
@@ -26,6 +28,8 @@ plotly_fable <- function(actuals,
                          title = "Combined forecast model",
                          xtitle = "Date",
                          ytitle = "Number",
+                         width = 1200,
+                         height = 400,
                          pi = TRUE,
                          fc_line = "solid") {
 
@@ -39,8 +43,8 @@ plotly_fable <- function(actuals,
         plotly::plot_ly(
             x = stats::as.formula("~date"),
             colors = "Dark2",
-            width = 1200,
-            height = 400
+            width = width,
+            height = height
         ) %>%
         plotly::layout(
             autosize = TRUE,
@@ -132,13 +136,17 @@ plotly_fable <- function(actuals,
 #' @param title A string with the plot title.
 #' @param xtitle A string with the x-axis title.
 #' @param ytitle A string with the y-axis title.
+#' @param width Width in pixels
+#' @param height Height in pixels
 #'
 #' @return A \code{plotly} object
 #' @export
 plotly_smooth <- function(.data,
                          title = "Combined forecast model",
                          xtitle = "Date",
-                         ytitle = "Number") {
+                         ytitle = "Number",
+                         width = 1200,
+                         height = 400) {
 
     fit_lo <- stats::as.formula("~fit_lo")
     fit_hi <- stats::as.formula("~fit_hi")
@@ -152,8 +160,8 @@ plotly_smooth <- function(.data,
             x = stats::as.formula("~date"),
             color = .model,
             colors = c("#000000", "#1b9e77"), # "#377eb8"
-            width = 1200,
-            height = 400
+            width = width,
+            height = height
         ) %>%
         plotly::layout(
             title = list(text = title, x = 0),
