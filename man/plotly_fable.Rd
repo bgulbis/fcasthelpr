@@ -31,7 +31,7 @@ plotly_fable(
 
 \item{ytitle}{A string with the y-axis title.}
 
-\item{pi}{If \code{TRUE} the prediction intervals for all individual models
+\item{pi}{If \code{TRUE} the prediction intervals for all models
 will be shown.}
 
 \item{fc_line}{A string which Sets the dash style of the forecast lines.

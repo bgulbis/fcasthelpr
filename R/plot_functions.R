@@ -11,7 +11,7 @@
 #' @param title A string with the plot title.
 #' @param xtitle A string with the x-axis title.
 #' @param ytitle A string with the y-axis title.
-#' @param pi If \code{TRUE} the prediction intervals for all individual models
+#' @param pi If \code{TRUE} the prediction intervals for all models
 #'   will be shown.
 #' @param fc_line A string which Sets the dash style of the forecast lines.
 #'   Valid options are: "solid", "dot", "dash", "longdash", "dashdot", or
@@ -36,8 +36,14 @@ plotly_fable <- function(actuals,
     .model <- stats::as.formula("~.model")
 
     p <- actuals %>%
-        plotly::plot_ly(x = stats::as.formula("~date"), colors = "Dark2") %>%
+        plotly::plot_ly(
+            x = stats::as.formula("~date"),
+            colors = "Dark2",
+            width = 1200,
+            height = 400
+        ) %>%
         plotly::layout(
+            autosize = TRUE,
             title = list(text = title, x = 0),
             xaxis = list(title = xtitle, showgrid = FALSE),
             yaxis = list(
@@ -50,23 +56,29 @@ plotly_fable <- function(actuals,
             y = y,
             line = list(color = "#000000"),
             name = "Actual"
-        ) %>%
-        plotly::add_ribbons(
-            ymin = lo_80,
-            ymax = hi_80,
-            data = combo,
-            opacity = 0.4,
-            color = .model,
-            # color = "#000000",
-            # fillcolor = "#BFBFBF",
-            line = list(
+        )
+
+    if (pi) {
+        p <- p %>%
+            plotly::add_ribbons(
+                ymin = lo_80,
+                ymax = hi_80,
+                data = combo,
+                opacity = 0.4,
+                color = .model,
                 # color = "#000000",
-                width = 1
-            ),
-            legendgroup = .model,
-            name = "Forecast",
-            showlegend = FALSE
-        ) %>%
+                # fillcolor = "#BFBFBF",
+                line = list(
+                    # color = "#000000",
+                    width = 1
+                ),
+                legendgroup = .model,
+                name = "Forecast",
+                showlegend = FALSE
+            )
+    }
+
+    p <- p %>%
         plotly::add_lines(
             y = .mean,
             data = combo,
@@ -139,7 +151,9 @@ plotly_smooth <- function(.data,
         plotly::plot_ly(
             x = stats::as.formula("~date"),
             color = .model,
-            colors = c("#000000", "#1b9e77") # "#377eb8"
+            colors = c("#000000", "#1b9e77"), # "#377eb8"
+            width = 1200,
+            height = 400
         ) %>%
         plotly::layout(
             title = list(text = title, x = 0),
@@ -204,7 +218,9 @@ plotly_calc <- function(.data,
     p <- .data %>%
         plotly::plot_ly(
             x = stats::as.formula("~date"),
-            colors = c("#000000", "#1b9e77") # "#377eb8"
+            colors = c("#000000", "#1b9e77"), # "#377eb8"
+            width = 1200,
+            height = 400
         ) %>%
         plotly::layout(
             title = list(text = title, x = 0),
